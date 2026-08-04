@@ -8,8 +8,10 @@ export interface DisclosureResult {
 }
 
 function buildKeywordRegex(keywords: string[]): RegExp {
+  // \b-bounded, not a raw substring match: short keywords like "Bot" or "KI"
+  // would otherwise fire inside unrelated words ("Bottich", "Skispringen").
   const escaped = keywords.map((k) => k.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
-  return new RegExp(`(${escaped.join("|")})`, "iu");
+  return new RegExp(`\\b(${escaped.join("|")})\\b`, "iu");
 }
 
 function truncate(s: string, max = 200): string {

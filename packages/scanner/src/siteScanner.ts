@@ -29,6 +29,9 @@ async function processFetchedPage(
   logger: Logger
 ): Promise<void> {
   const pageId = createPage(db, siteId, fetched.page.url(), fetched.statusCode, fetched.title);
+  if (fetched.consentDismissed) {
+    logger.info({ url: fetched.page.url() }, "Cookie-Consent-Banner automatisch geschlossen");
+  }
   const findings = await chatbotCheck(fetched.page, {
     url: fetched.page.url(),
     requestUrls: fetched.requestUrls,
@@ -48,6 +51,50 @@ async function processFetchedPage(
       screenshotPath: finding.screenshotPath ?? null,
     });
     logger.info({ url: fetched.page.url(), status: finding.status }, "Chatbot-Check abgeschlossen");
+  }
+}
+
+/**
+ * Scans exactly one given URL, without crawling/discovering further pages.
+ * Useful when the page of interest (e.g. a support page with a chat widget)
+ * is known upfront and might not surface within the domain-wide crawl budget.
+ */
+export async function scanSinglePage(
+  browser: Browser,
+  db: DatabaseSync,
+  scanId: number,
+  pageUrl: string,
+  config: ScanConfig,
+  screenshotDir: string,
+  logger: Logger
+): Promise<SiteScanResult> {
+  const url = new URL(pageUrl);
+  const siteId = createSite(db, scanId, url.hostname + url.pathname);
+  logger.info({ pageUrl, siteId }, "Starte Einzelseiten-Scan");
+
+  const robots = await fetchRobots(url.origin, config.userAgent, config.requestTimeoutMs);
+  if (!robots.isAllowed(pageUrl, config.userAgent)) {
+    logger.warn({ pageUrl }, "Seite laut robots.txt gesperrt, wird übersprungen");
+    createPage(db, siteId, pageUrl, null, "(skipped_by_robots)");
+    updateSiteStatus(db, siteId, "inaccessible", "skipped_by_robots");
+    return { siteId, pagesScanned: 0, pagesSkippedByRobots: 1 };
+  }
+
+  const context = await browser.newContext({ userAgent: config.userAgent });
+  try {
+    updateSiteStatus(db, siteId, "scanning");
+    const fetched = await fetchPage(context, pageUrl, config, robots);
+    await processFetchedPage(db, siteId, fetched, config, screenshotDir, logger);
+    await fetched.page.close().catch(() => {});
+    updateSiteStatus(db, siteId, "done");
+    logger.info({ pageUrl }, "Einzelseiten-Scan abgeschlossen");
+    return { siteId, pagesScanned: 1, pagesSkippedByRobots: 0 };
+  } catch (err) {
+    logger.warn({ pageUrl, err }, "Seite konnte nicht geladen werden");
+    updateSiteStatus(db, siteId, "inaccessible", err instanceof Error ? err.message : String(err));
+    return { siteId, pagesScanned: 0, pagesSkippedByRobots: 0 };
+  } finally {
+    await context.close().catch(() => {});
   }
 }
 

@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="de">
+<head><meta charset="utf-8"><title>Beispiel Firma – Icon-only Chat-Launcher</title></head>
+<body>
+  <h1>Beispiel Firma AG</h1>
+  <p>Selbstgebauter Chat-Launcher ohne semantisches Button-Element (wie z.B. bei PostFinance).</p>
+
+  <div class="chat-wrapper">
+    <a class="chat-launcher" aria-label="Chat öffnen">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /></svg>
+    </a>
+  </div>
+
+  <!-- class="footer-bottom" here is a regression check: the widget-class-hint
+       matching must not treat this as matching the "bot" keyword substring. -->
+  <p class="footer-bottom">Kontakt und weitere Informationen finden Sie im Footer.</p>
+</body>
+</html>

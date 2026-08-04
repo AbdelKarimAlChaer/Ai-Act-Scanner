@@ -7,7 +7,7 @@ import { spawn } from "node:child_process";
 import { openDb, createScan, finishScan, listSites, getSite } from "../db/index.js";
 import { loadConfig } from "../config/index.js";
 import { createLogger } from "../logger.js";
-import { scanSite } from "../siteScanner.js";
+import { scanSite, scanSinglePage } from "../siteScanner.js";
 import { generateMarkdownReport } from "../report/markdown.js";
 
 const DATA_DIR = join(process.cwd(), "data");
@@ -28,20 +28,21 @@ program.name("scanner").description("AI Act Transparency Scanner CLI");
 program
   .command("scan")
   .description("Scan one or more domains for Art. 50 chatbot transparency (Check A)")
-  .option("--domain <domain>", "single domain to scan, e.g. example.ch")
+  .option("--domain <domain>", "single domain to crawl (up to maxPagesPerDomain), e.g. example.ch")
   .option("--input <file>", "path to a domains.txt file (one domain per line, # comments)")
+  .option("--page <url>", "check exactly this one URL, no crawling (e.g. a known support page)")
   .option("--config <file>", "path to a scan config JSON (defaults to built-in config)")
   .option("--verbose", "debug-level logging", false)
   .action(async (opts) => {
     const logger = createLogger(opts.verbose ? "debug" : "info");
-    if (!opts.domain && !opts.input) {
-      logger.error("Bitte --domain <domain> oder --input <domains.txt> angeben");
+    if (!opts.domain && !opts.input && !opts.page) {
+      logger.error("Bitte --domain <domain>, --page <url> oder --input <domains.txt> angeben");
       process.exitCode = 1;
       return;
     }
 
-    const domains = opts.domain ? [opts.domain] : readDomainsFile(opts.input);
-    if (domains.length === 0) {
+    const domains = opts.domain ? [opts.domain] : opts.input ? readDomainsFile(opts.input) : [];
+    if (!opts.page && domains.length === 0) {
       logger.error("Keine Domains gefunden");
       process.exitCode = 1;
       return;
@@ -50,10 +51,17 @@ program
     const config = loadConfig(opts.config);
     const db = openDb(DB_PATH);
     const scanId = createScan(db, JSON.stringify(config));
-    logger.info({ scanId, domains }, "Scan gestartet");
+    logger.info({ scanId, domains, page: opts.page }, "Scan gestartet");
 
     const browser = await chromium.launch({ headless: true });
     try {
+      if (opts.page) {
+        try {
+          await scanSinglePage(browser, db, scanId, opts.page, config, SCREENSHOT_DIR, logger);
+        } catch (err) {
+          logger.error({ page: opts.page, err }, "Seiten-Scan fehlgeschlagen");
+        }
+      }
       for (const domain of domains) {
         try {
           await scanSite(browser, db, scanId, domain, config, SCREENSHOT_DIR, logger);

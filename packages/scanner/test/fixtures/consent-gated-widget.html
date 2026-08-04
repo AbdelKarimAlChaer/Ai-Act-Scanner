@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="de">
+<head><meta charset="utf-8"><title>Beispiel Firma – Consent-gated Chat</title></head>
+<body>
+  <h1>Beispiel Firma AG</h1>
+  <p>Willkommen auf unserer Website.</p>
+
+  <div id="consent-banner" style="position:fixed;inset:0;background:white;z-index:9999;padding:20px;">
+    <p>Diese Website verwendet Cookies, um unser Angebot zu verbessern.</p>
+    <button id="accept-btn">Akzeptieren</button>
+  </div>
+
+  <script>
+    // Mirrors real-world consent-management platforms (OneTrust, Usercentrics,
+    // Cookiebot): the chat widget script/DOM is only injected AFTER consent,
+    // not just visually hidden behind the banner.
+    document.getElementById('accept-btn').addEventListener('click', function () {
+      document.getElementById('consent-banner').remove();
+      var el = document.createElement('div');
+      el.id = 'intercom-container';
+      el.setAttribute('role', 'dialog');
+      el.setAttribute('aria-label', 'Chat');
+      el.innerHTML = '<div class="intercom-greeting">Hallo! Ich bin ein KI-Assistent und helfe Ihnen gerne weiter.</div>';
+      document.body.appendChild(el);
+      window.Intercom = function () {};
+    });
+  </script>
+</body>
+</html>

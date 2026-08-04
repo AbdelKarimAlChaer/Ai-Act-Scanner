@@ -88,4 +88,12 @@ describe("chatbotCheck (Check A)", () => {
     const evidence = findings[0].evidence as any;
     expect(evidence.widget.provider).toBe("custom_llm");
   });
+
+  it("erkennt einen selbstgebauten Icon-only-Launcher ohne semantisches Button-Element", async () => {
+    const findings = await runCheck("icon-only-widget.html");
+    expect(findings).toHaveLength(1);
+    const evidence = findings[0].evidence as any;
+    expect(evidence.widget.provider).toBe("generic_heuristic");
+    expect(findings[0].status).toBe("no_disclosure");
+  });
 });

@@ -2,12 +2,14 @@ import type { BrowserContext, Page } from "playwright";
 import type { ScanConfig } from "../config/index.js";
 import { getHostQueue } from "./rateLimiter.js";
 import type { RobotsInfo } from "./robots.js";
+import { dismissConsentBanner } from "./consent.js";
 
 export interface FetchedPage {
   page: Page;
   statusCode: number | null;
   title: string | null;
   requestUrls: string[];
+  consentDismissed: boolean;
 }
 
 function sleep(ms: number) {
@@ -45,12 +47,17 @@ export async function fetchPage(
           timeout: config.requestTimeoutMs,
           waitUntil: "networkidle",
         });
+        const consentDismissed = await dismissConsentBanner(page).catch(() => false);
+        if (consentDismissed) {
+          await page.waitForTimeout(500);
+        }
         const title = await page.title().catch(() => null);
         return {
           page,
           statusCode: response?.status() ?? null,
           title,
           requestUrls,
+          consentDismissed,
         };
       } catch (err) {
         lastError = err;

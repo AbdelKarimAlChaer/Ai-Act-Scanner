@@ -113,16 +113,26 @@ async function findGenericChatWidget(page: Page): Promise<string | null> {
         if (hasInput && hasButton) return '[role="dialog"]';
       }
 
-      const candidates = Array.from(document.querySelectorAll("[class], iframe"));
+      const candidates = Array.from(document.querySelectorAll("[class], [id], iframe"));
       for (const el of candidates) {
         const cls = (el.getAttribute("class") || "").toLowerCase();
-        const matchesHint = classHints.some((hint) => cls.includes(hint));
+        const id = (el.id || "").toLowerCase();
+        // Word-boundary match, not substring: "bot" must not fire on
+        // "footer-bottom" or "margin-bottom", only on tokens like "chat-bot".
+        const matchesHint = classHints.some((hint) => {
+          const re = new RegExp(`\\b${hint}\\b`, "i");
+          return re.test(cls) || re.test(id);
+        });
         if (!matchesHint) continue;
+        // Custom-built widgets often use an icon-only launcher (a plain <a>,
+        // an element with role="button", or a bare <svg>/<img>) instead of a
+        // real <button>, so a strict input/textarea/button check misses them.
         const looksInteractive =
-          el.tagName === "IFRAME" || el.querySelector("input, textarea, button");
+          el.tagName === "IFRAME" ||
+          el.querySelector('input, textarea, button, a, [role="button"], [onclick], svg, img');
         if (looksInteractive) {
           const firstClass = el.getAttribute("class")?.split(/\s+/)[0];
-          return firstClass ? `.${firstClass}` : el.tagName.toLowerCase();
+          return firstClass ? `.${firstClass}` : id ? `#${id}` : el.tagName.toLowerCase();
         }
       }
       return null;

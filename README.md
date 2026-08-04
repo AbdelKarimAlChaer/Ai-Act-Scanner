@@ -45,7 +45,16 @@ cd packages/scanner
 node --import tsx src/cli/index.ts scan --domain example.ch --verbose
 # oder mehrere Domains:
 node --import tsx src/cli/index.ts scan --input domains.txt --config scan.config.json
+# oder genau eine bekannte Seite direkt prüfen, ohne Crawling (z.B. eine Support-Seite):
+node --import tsx src/cli/index.ts scan --page https://example.ch/support --verbose
 ```
+
+Vor dem eigentlichen Check wird automatisch versucht, ein Cookie-/Consent-Banner wegzuklicken
+(bekannte Anbieter wie OneTrust, Cookiebot, Usercentrics, Didomi, Quantcast, Klaro, TrustArc plus
+ein genereller Fallback über den Button-Text). Das ist nötig, weil viele Consent-Management-Tools
+Skripte wie Chat-Widgets erst nach Zustimmung laden — ohne Klick würde der Scan sonst fälschlich
+`no_widget` melden, obwohl ein Widget existiert. Geklickt wird ausschliesslich ein
+"Akzeptieren"-artiger Button, nie "Einstellungen" oder "Ablehnen".
 
 `domains.txt`: eine Domain pro Zeile, Kommentare mit `#`. Ergebnisse landen in
 `packages/scanner/data/scanner.db` (SQLite) plus Screenshots unter
@@ -103,8 +112,9 @@ npm test
 
 Fixture-basierte Tests unter `packages/scanner/test/fixtures/` decken die in der SPEC geforderten
 Fälle ab: Widget mit Disclosure im Launcher, Widget ohne Disclosure, Disclosure nur im Seitentext
-(`disclosure_buried`), kein Widget, Custom-LLM-Widget. Playwright läuft gegen einen lokalen
-Static-Server (`test/staticServer.ts`).
+(`disclosure_buried`), kein Widget, Custom-LLM-Widget, Icon-only-Launcher ohne semantisches
+Button-Element, sowie ein hinter einem Consent-Banner verstecktes Widget. Playwright läuft gegen
+einen lokalen Static-Server (`test/staticServer.ts`).
 
 ## Live-Demo lokal nachvollziehen
 
@@ -133,3 +143,6 @@ Danach Dashboard wie oben starten und `http://localhost:5173` öffnen.
   abschliessende Konformitätsbewertung.
 - Check B (EU-Bezug) und Check C (KI-Bilder/Deepfakes) aus der SPEC sind noch nicht implementiert;
   ohne Check B fehlt aktuell der Vorfilter auf EU-Relevanz.
+- Das Consent-Banner-Handling kennt eine Handvoll gängiger Anbieter plus einen generischen
+  Text-Fallback ("Akzeptieren" o.ä.); exotische oder rein visuelle Banner ohne erkennbaren
+  Accept-Button werden nicht geschlossen.
