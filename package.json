@@ -1,0 +1,23 @@
+{
+  "name": "ai-act-scanner",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "packages/shared",
+    "packages/scanner",
+    "packages/api",
+    "packages/dashboard"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "npm run build --workspaces --if-present",
+    "test": "npm run test --workspace packages/scanner",
+    "scan": "npm run start --workspace packages/scanner --",
+    "serve": "npm run serve --workspace packages/scanner --"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.3"
+  }
+}

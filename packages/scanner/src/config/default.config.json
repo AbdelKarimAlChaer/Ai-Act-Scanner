@@ -1,0 +1,63 @@
+{
+  "userAgent": "AiActScannerBot/0.1 (+https://github.com/AbdelKarimAlChaer/Ai-Act-Scanner; kontakt: abdel-karim_al-chaer@mail.ch)",
+  "requestsPerSecondPerHost": 1,
+  "maxPagesPerDomain": 25,
+  "requestTimeoutMs": 15000,
+  "maxRetries": 3,
+  "retryBaseDelayMs": 1000,
+  "pagePriorityPatterns": [
+    "^/$",
+    "kontakt",
+    "contact",
+    "impressum",
+    "imprint",
+    "datenschutz",
+    "privacy",
+    "produkt",
+    "product",
+    "leistung",
+    "service",
+    "blog"
+  ],
+  "disclosureKeywords": {
+    "de": [
+      "KI",
+      "künstliche Intelligenz",
+      "künstlicher Intelligenz",
+      "KI-Assistent",
+      "KI-gestützt",
+      "automatisiert",
+      "automatisierte Antworten",
+      "Bot",
+      "Chatbot",
+      "virtueller Assistent",
+      "virtuelle Assistentin"
+    ],
+    "en": [
+      "AI",
+      "artificial intelligence",
+      "AI assistant",
+      "AI-powered",
+      "automated",
+      "bot",
+      "chatbot",
+      "virtual assistant"
+    ],
+    "fr": [
+      "IA",
+      "intelligence artificielle",
+      "assistant IA",
+      "automatisé",
+      "assistant virtuel",
+      "agent conversationnel"
+    ],
+    "it": [
+      "IA",
+      "intelligenza artificiale",
+      "assistente IA",
+      "automatizzato",
+      "assistente virtuale",
+      "chatbot"
+    ]
+  }
+}

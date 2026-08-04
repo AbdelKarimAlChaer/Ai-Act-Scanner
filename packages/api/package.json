@@ -1,0 +1,19 @@
+{
+  "name": "@ai-act-scanner/api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node --import tsx src/index.ts"
+  },
+  "dependencies": {
+    "@ai-act-scanner/scanner": "*",
+    "@ai-act-scanner/shared": "*",
+    "@hono/node-server": "^1.13.7",
+    "hono": "^4.6.9"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.0",
+    "tsx": "^4.19.2"
+  }
+}
